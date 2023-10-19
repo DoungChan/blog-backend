@@ -23,7 +23,7 @@ mongoose
   })
   .catch((err) => console.log(err + " error"));
 
+// middleware
+app.use(express.json());
 // routes
 app.use("/blogs", blogRoutes);
-// middleware
-app.use(morgan("dev"));
