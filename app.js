@@ -26,4 +26,7 @@ mongoose
 // middleware
 app.use(express.json());
 // routes
+app.get("/", (req, res) => {
+  res.redirect("/blogs");
+});
 app.use("/blogs", blogRoutes);
