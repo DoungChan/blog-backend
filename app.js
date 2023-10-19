@@ -23,22 +23,62 @@ mongoose
   .catch((err) => console.log(err + " error"));
 
 // add blog
-app.get("/add-blog", (req, res) => {
+app.post("/blogs", (req, res) => {
+  const { title, snippet, body } = req.body;
+
+  if (!title || !snippet || !body) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
   const blog = new Blog({
-    title: "new blog",
-    snippet: "about my new blog",
-    body: "more about my new blog",
+    title,
+    snippet,
+    body,
   });
+
   blog
     .save()
     .then((result) => {
-      res.send(result);
+      res.status(201).json(result);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: "An error occurred while saving the blog post" });
+    });
+});
+
+//update blog
+app.put("/blogs/:id", (req, res) => {
+  const { title, snippet, body } = req.body;
+
+  if (!title || !snippet || !body) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  Blog.findByIdAndUpdate(
+    req.params.id,
+    {
+      title,
+      snippet,
+      body,
+    },
+    { new: true }
+  )
+    .then((result) => {
+      res.status(200).json(result);
+    })
+    .catch((err) => {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: "An error occurred while saving the blog post" });
+    });
 });
 
 // get all blogs
-app.get("/all-blogs", (req, res) => {
+app.get("/blogs", (req, res) => {
   Blog.find()
     .then((result) => {
       res.send(result);
@@ -46,41 +86,44 @@ app.get("/all-blogs", (req, res) => {
     .catch((err) => console.log(err));
 });
 // get a single blog
-app.get("/single-blog ", (req, res) => {
-  Blog.findById("5f8a8b0f7b7c1d1c9c6a7c4b")
+app.get("/blogs/:id", (req, res) => {
+  const id = req.params.id; // Extract the "id" parameter from the URL
+
+  Blog.findById(id)
     .then((result) => {
-      res.send(result);
+      if (!result) {
+        return res.status(404).json({ error: "Blog not found" });
+      }
+      res.json(result);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: "An error occurred while fetching the blog" });
+    });
 });
+
 // delete a blog
-app.get("/delete-blog", (req, res) => {
-  Blog.findByIdAndDelete("6531029f31b61666ad38feb6")
+app.delete(`/blogs/:id`, (req, res) => {
+  const id = req.params.id;
+
+  Blog.findByIdAndDelete(id)
     .then((result) => {
-      res.send(result);
+      if (!result) {
+        return res.status(404).json({ error: "Blog not found" });
+      }
+      res
+        .status(200)
+        .json({ message: "Blog deleted successfully", deletedBlog: result });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: "An error occurred while deleting the blog" });
+    });
 });
+
 // middleware
 app.use(morgan("dev"));
-
-app.get("/", (req, res) => {
-  res.render("index", { title: "Home" });
-});
-
-app.get("/about", (req, res) => {
-  res.render("about", { title: "About" });
-});
-
-app.get("/blogs/create", (req, res) => {
-  res.render("create", { title: "Create" });
-});
-// redirects
-app.get("/about-us", (req, res) => {
-  res.redirect("/about");
-});
-//
-// 404 page
-app.use((req, res) => {
-  res.status(404).sendFile("./views/404.html", { root: __dirname });
-});
