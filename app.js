@@ -2,12 +2,21 @@ const express = require("express");
 const morgan = require("morgan");
 const mongoose = require("mongoose");
 const blogRoutes = require("./routes/blogRouts");
+const compression = require("compression");
+const helmet = require("helmet");
 
 // express app
 const app = express();
 
-// register view engine
-app.set("view engine", "ejs");
+// Add helmet to the middleware chain.
+// Set CSP headers to allow our Bootstrap and Jquery to be served
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      "script-src": ["'self'", "code.jquery.com", "cdn.jsdelivr.net"],
+    },
+  })
+);
 
 // listen for requests
 app.listen(3000);
@@ -25,8 +34,10 @@ mongoose
 
 // middleware
 app.use(express.json());
+
+app.use(compression()); // Compress all routes
 // routes
 app.get("/", (req, res) => {
   res.redirect("/blogs");
 });
-app.use("/blogs", blogRoutes);
+app.use("/blogs", blogRoutes); // add blog routes
